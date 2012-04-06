@@ -67,7 +67,7 @@ var initMarkers = function()
       console.log('Done');
     },
     error: function(jqXHR, textStatus, errorThrown) {
-      alert('Error: ' + errorThrown);
+      alert('Error fetching buildings list: ' + errorThrown);
     }
   });
 }
