@@ -13,52 +13,60 @@ var addNode = function(node)
     map      : map
   });
 
-  markers[node['bldg']].push(marker);
+  var buildingId = node['bldg'];
 
-  path[node['bldg']].push(marker.getPosition());
+  marker.bldg = buildingId;
+
+  markers[buildingId].push(marker);
+
+  path[buildingId].push(marker.getPosition());
+
+  google.maps.event.addListener(marker, 'click', function()
+  {
+    marker.setMap(null);
+    for ( var i = 0, n = markers[marker.bldg].length; i < n && markers[marker.bldg][i] != marker; ++i );
+    path[marker.bldg].removeAt(i);
+    markers[marker.bldg].splice(i, 1);
+  });
+
 }
 
 var initMarkers = function()
 {
   console.log('Retrieving buildings...');
-  $.get('get_buildings.php', function( buildings )
-  {
-    console.log(buildings);
-
-    Object.keys(buildings).forEach(function(bldgId)
-    {
-      markers[bldgId] = [];
-      path[bldgId] = new google.maps.MVCArray;
-
-      var building = buildings[bldgId];
-      console.log(building);
-      Object.keys(building['nds']).forEach(function(nodeId)
+  //$.get('get_buildings.php', function( buildings )
+  $.ajax({
+    url: 'get_buildings.php',
+    success: function(buildings) {
+      Object.keys(buildings).forEach(function(bldgId)
       {
-        var node = building['nds'][nodeId];
-        console.log(node['lat'] + ',' + node['lng']);
-        addNode(node);
-      });
+        markers[bldgId] = [];
+        path[bldgId] = new google.maps.MVCArray;
 
-      polygon[bldgId] = new google.maps.Polygon({
-        strokeWeight : 2,
-        fillColor    : '#ff0000'
+        var building = buildings[bldgId];
+        Object.keys(building['nds']).forEach(function(nodeId)
+        {
+          var node = building['nds'][nodeId];
+          addNode(node);
+        });
+
+        polygon[bldgId] = new google.maps.Polygon({
+          strokeWeight : 2,
+          fillColor    : '#ff0000'
+        });
+        polygon[bldgId].setPaths(new google.maps.MVCArray([ path[bldgId] ]));
+        polygon[bldgId].setMap(map);
       });
-      polygon[bldgId].setPaths(new google.maps.MVCArray([ path[bldgId] ]));
-      polygon[bldgId].setMap(map);
-        
-    });
+      console.log('Done');
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      alert('Error: ' + errorThrown);
+    }
   });
 }
 
 $(document).ready(function()
 {
-  /*var baseIcon = new google.maps.MarkerImage(
-    'red-dot.png',
-    new google.maps.Size(12,12),
-    new google.maps.Point(0,0),
-    new google.maps.Point(6,6)
-  );*/
-
   var centerPoint = new google.maps.LatLng(34.67700, -82.83655);
 
   var options = {
@@ -68,7 +76,7 @@ $(document).ready(function()
     mapTypeId: google.maps.MapTypeId.HYBRID
   };
 
-  map = new google.maps.Map($('#map-canvas').get(0), options);
+  map = new google.maps.Map(document.getElementById('map-canvas'), options);
 
   initMarkers();
 });
