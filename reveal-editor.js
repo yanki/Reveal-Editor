@@ -38,37 +38,26 @@ var addNode = function(node)
 
 }
 
-var initMarkers = function()
+var initMarkers = function(buildings)
 {
-  console.log('Retrieving buildings...');
-  //$.get('get_buildings.php', function( buildings )
-  $.ajax({
-    url: 'get_buildings.php',
-    success: function(buildings) {
-      Object.keys(buildings).forEach(function(bldgId)
-      {
-        markers[bldgId] = [];
-        path[bldgId] = new google.maps.MVCArray;
+  Object.keys(buildings).forEach(function(bldgId)
+  {
+    markers[bldgId] = [];
+    path[bldgId] = new google.maps.MVCArray;
 
-        var building = buildings[bldgId];
-        Object.keys(building['nds']).forEach(function(nodeId)
-        {
-          var node = building['nds'][nodeId];
-          addNode(node);
-        });
+    var building = buildings[bldgId];
+    Object.keys(building['nds']).forEach(function(nodeId)
+    {
+      var node = building['nds'][nodeId];
+      addNode(node);
+    });
 
-        polygon[bldgId] = new google.maps.Polygon({
-          strokeWeight : 2,
-          fillColor    : '#ff0000'
-        });
-        polygon[bldgId].setPaths(new google.maps.MVCArray([ path[bldgId] ]));
-        polygon[bldgId].setMap(map);
-      });
-      console.log('Done');
-    },
-    error: function(jqXHR, textStatus, errorThrown) {
-      alert('Error fetching buildings list: ' + errorThrown);
-    }
+    polygon[bldgId] = new google.maps.Polygon({
+      strokeWeight : 2,
+      fillColor    : '#ff0000'
+    });
+    polygon[bldgId].setPaths(new google.maps.MVCArray([ path[bldgId] ]));
+    polygon[bldgId].setMap(map);
   });
 }
 
@@ -85,6 +74,19 @@ $(document).ready(function()
 
   map = new google.maps.Map(document.getElementById('map-canvas'), options);
 
-  initMarkers();
+  console.log('Fetching buildings list...');
+  $.ajax({
+    url     :'get_buildings.php',
+    success : function(buildings)
+              {
+                initMarkers(buildings);
+                console.log('Done');
+              },
+    error   : function(jqXHR, textStatus, errorThrown)
+              {
+                alert('Error fetching buildings list');
+                console.log('Error: ' + errorThrown);
+              },
+  });
 });
 
