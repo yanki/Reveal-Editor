@@ -9,8 +9,9 @@ var polygon = [];
 var addNode = function(node)
 {
   var marker = new google.maps.Marker({
-    position : new google.maps.LatLng(node['lat'],node['lng']),
-    map      : map
+    position  : new google.maps.LatLng(node['lat'],node['lng']),
+    draggable : true,
+    map       : map
   });
 
   var buildingId = node['bldg'];
@@ -27,6 +28,12 @@ var addNode = function(node)
     for ( var i = 0, n = markers[marker.bldg].length; i < n && markers[marker.bldg][i] != marker; ++i );
     path[marker.bldg].removeAt(i);
     markers[marker.bldg].splice(i, 1);
+  });
+
+  google.maps.event.addListener(marker, 'dragend', function()
+  {
+    for ( var i = 0, n = markers[marker.bldg].length; i < n && markers[marker.bldg][i] != marker; ++i );
+    path[marker.bldg].setAt(i, marker.getPosition());
   });
 
 }
