@@ -24,13 +24,10 @@ var addNode = function(node)
     map       : map
   });
 
-  var buildingId = node['bldg'];
+  marker.bldg = node['bldg'];
 
-  marker.bldg = buildingId;
-
-  markers[buildingId].push(marker);
-
-  path[buildingId].push(marker.getPosition());
+  markers[marker.bldg].push(marker);
+  path[marker.bldg].push(marker.getPosition());
 
   google.maps.event.addListener(marker, 'click', function()
   {
