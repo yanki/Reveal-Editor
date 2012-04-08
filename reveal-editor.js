@@ -6,6 +6,16 @@ var markers = [];
 var path = [];
 var polygon = [];
 
+var deleteNode = function(building, index)
+{
+  marker = markers[building][index];
+  if ( confirm('Delete marker #' + marker.bldg + '?') ) {
+    marker.setMap(null);
+    path[marker.bldg].removeAt(index);
+    markers[marker.bldg].splice(index, 1);
+  }
+}
+
 var addNode = function(node)
 {
   var marker = new google.maps.Marker({
@@ -24,10 +34,18 @@ var addNode = function(node)
 
   google.maps.event.addListener(marker, 'click', function()
   {
-    marker.setMap(null);
     for ( var i = 0, n = markers[marker.bldg].length; i < n && markers[marker.bldg][i] != marker; ++i );
-    path[marker.bldg].removeAt(i);
-    markers[marker.bldg].splice(i, 1);
+
+    var contentString = 
+      '<p>Marker #' + marker.bldg + '</p>' +
+      '<p>' + marker.getPosition() + '</p>' +
+      '<p><button onClick="deleteNode(' + marker.bldg + ',' + i + ')">Delete</button></p>';
+
+    var infoWindow = new google.maps.InfoWindow({
+      content: contentString
+    });
+
+    infoWindow.open(map, marker);
   });
 
   google.maps.event.addListener(marker, 'dragend', function()
