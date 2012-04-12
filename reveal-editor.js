@@ -91,7 +91,7 @@ $(document).ready(function()
 
   console.log('Fetching buildings list...');
   $.ajax({
-    url     :'get_buildings.php',
+    url     :'buildings.php',
     success : function(buildings)
               {
                 initMarkers(buildings);
