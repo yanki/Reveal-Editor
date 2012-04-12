@@ -20,7 +20,7 @@ function haversineDistance($lat1, $lng1, $lat2, $lng2)
   return $distance;
 }
 
-function buildingsList($center_lat, $center_lng, $distance_limit)
+function buildingsList($center_lat, $center_lng, $distance_limit, $excludes = array())
 { 
 
   include_once('db_connect.php');
@@ -49,7 +49,7 @@ function buildingsList($center_lat, $center_lng, $distance_limit)
             'lng'  => $node['lng']));
   }
   
-  // Remove buildings that are out of range
+  // Remove buildings that are out of range or have been specifically excluded
   foreach ( $buildings as $id => $building )
   {
     $in_range = false;
@@ -61,7 +61,7 @@ function buildingsList($center_lat, $center_lng, $distance_limit)
         break;
       }
     }
-    if ( ! $in_range )
+    if ( ! $in_range || in_array($id, $excludes) )
       unset($buildings[$id]);  
   }
 
@@ -73,5 +73,8 @@ $center_lat = ( ! isset($_GET['lat']) || ! is_numeric($_GET['lat']) ) ? 0 : $_GE
 $center_lng = ( ! isset($_GET['lng']) || ! is_numeric($_GET['lng']) ) ? 0 : $_GET['lng'];
 $distance_limit = ( ! isset($_GET['d']) || ! is_numeric($_GET['d']) ) ? INF : $_GET['d'];
 
-echo json_encode(buildingsList($center_lat,$center_lng,$distance_limit));
+if ( isset($_GET['exclude']) )
+  echo json_encode(buildingsList($center_lat,$center_lng,$distance_limit,explode(',',$_GET['exclude'])));
+else
+  echo json_encode(buildingsList($center_lat,$center_lng,$distance_limit));
 
