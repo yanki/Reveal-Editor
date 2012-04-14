@@ -20,40 +20,40 @@ function haversineDistance($lat1, $lng1, $lat2, $lng2)
   return $distance;
 }
 
-function buildingsList($center_lat, $center_lng, $distance_limit, $excludes = array())
+function landmarksList($center_lat, $center_lng, $distance_limit, $excludes = array())
 { 
 
-  include_once('db_connect.php');
+  include_once('../../db_connect.php');
 
-  $buildings = array();
+  $landmarks = array();
 
-  $select_buildings = $db->query("SELECT * FROM buildings");
-  foreach ( $select_buildings->fetchAll() as $building )
+  $select_landmarks = $db->query("SELECT * FROM landmarks");
+  foreach ( $select_landmarks->fetchAll() as $landmark )
   {
-    $buildings[ $building['id'] ] = 
-      array('name' => $building['name'],
-            'type' => $building['type'],
-            'ele'  => $building['elevation'],
-            'hgt'  => $building['height'],
+    $landmarks[ $landmark['id'] ] = 
+      array('name' => $landmark['name'],
+            'type' => $landmark['type'],
+            'ele'  => $landmark['elevation'],
+            'hgt'  => $landmark['height'],
             'nds'  => array());
   }
 
-  $select_nodes = $db->query("SELECT * FROM building_nodes");
+  $select_nodes = $db->query("SELECT * FROM landmark_nodes");
   foreach ( $select_nodes->fetchAll() as $node )
   {
     array_push(
-      $buildings[ $node['building'] ]['nds'],
+      $landmarks[ $node['landmark'] ]['nds'],
       array('id'   => $node['id'],
-            'bldg' => $node['building'],
+            'lm' => $node['landmark'],
             'lat'  => $node['lat'],
             'lng'  => $node['lng']));
   }
   
-  // Remove buildings that are out of range or have been specifically excluded
-  foreach ( $buildings as $id => $building )
+  // Remove landmarks that are out of range or have been specifically excluded
+  foreach ( $landmarks as $id => $landmark )
   {
     $in_range = false;
-    foreach ( $building['nds'] as $node )
+    foreach ( $landmark['nds'] as $node )
     {
       if ( haversineDistance($node['lat'], $node['lng'], $center_lat, $center_lng) < $distance_limit )
       {
@@ -62,10 +62,10 @@ function buildingsList($center_lat, $center_lng, $distance_limit, $excludes = ar
       }
     }
     if ( ! $in_range || in_array($id, $excludes) )
-      unset($buildings[$id]);  
+      unset($landmarks[$id]);  
   }
 
-  return $buildings;
+  return $landmarks;
 }
 
 // Set default values for coordinate and distance limit if none are given
@@ -74,7 +74,7 @@ $center_lng = ( ! isset($_GET['lng']) || ! is_numeric($_GET['lng']) ) ? 0 : $_GE
 $distance_limit = ( ! isset($_GET['d']) || ! is_numeric($_GET['d']) ) ? INF : $_GET['d'];
 
 if ( isset($_GET['exclude']) )
-  echo json_encode(buildingsList($center_lat,$center_lng,$distance_limit,explode(',',$_GET['exclude'])));
+  echo json_encode(landmarksList($center_lat,$center_lng,$distance_limit,explode(',',$_GET['exclude'])));
 else
-  echo json_encode(buildingsList($center_lat,$center_lng,$distance_limit));
+  echo json_encode(landmarksList($center_lat,$center_lng,$distance_limit));
 

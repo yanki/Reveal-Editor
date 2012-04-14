@@ -6,13 +6,13 @@ var markers = [];
 var path = [];
 var polygon = [];
 
-var deleteNode = function(building, index)
+var deleteNode = function(landmark, index)
 {
-  marker = markers[building][index];
-  if ( confirm('Delete marker #' + marker.bldg + '?') ) {
+  marker = markers[landmark][index];
+  if ( confirm('Delete marker #' + marker.landmark + '?') ) {
     marker.setMap(null);
-    path[marker.bldg].removeAt(index);
-    markers[marker.bldg].splice(index, 1);
+    path[marker.landmark].removeAt(index);
+    markers[marker.landmark].splice(index, 1);
   }
 }
 
@@ -24,19 +24,19 @@ var addNode = function(node)
     map       : map
   });
 
-  marker.bldg = node['bldg'];
+  marker.landmark = node['lm'];
 
-  markers[marker.bldg].push(marker);
-  path[marker.bldg].push(marker.getPosition());
+  markers[marker.landmark].push(marker);
+  path[marker.landmark].push(marker.getPosition());
 
   google.maps.event.addListener(marker, 'click', function()
   {
-    for ( var i = 0, n = markers[marker.bldg].length; i < n && markers[marker.bldg][i] != marker; ++i );
+    for ( var i = 0, n = markers[marker.landmark].length; i < n && markers[marker.landmark][i] != marker; ++i );
 
     var contentString = 
-      '<p>Marker #' + marker.bldg + '</p>' +
+      '<p>Marker #' + marker.landmark + '</p>' +
       '<p>' + marker.getPosition() + '</p>' +
-      '<p><button onClick="deleteNode(' + marker.bldg + ',' + i + ')">Delete</button></p>';
+      '<p><button onClick="deleteNode(' + marker.landmark + ',' + i + ')">Delete</button></p>';
 
     var infoWindow = new google.maps.InfoWindow({
       content: contentString
@@ -47,32 +47,32 @@ var addNode = function(node)
 
   google.maps.event.addListener(marker, 'dragend', function()
   {
-    for ( var i = 0, n = markers[marker.bldg].length; i < n && markers[marker.bldg][i] != marker; ++i );
-    path[marker.bldg].setAt(i, marker.getPosition());
+    for ( var i = 0, n = markers[marker.landmark].length; i < n && markers[marker.landmark][i] != marker; ++i );
+    path[marker.landmark].setAt(i, marker.getPosition());
   });
 
 }
 
-var initMarkers = function(buildings)
+var initMarkers = function(landmarks)
 {
-  Object.keys(buildings).forEach(function(bldgId)
+  Object.keys(landmarks).forEach(function(landmarkId)
   {
-    markers[bldgId] = [];
-    path[bldgId] = new google.maps.MVCArray;
+    markers[landmarkId] = [];
+    path[landmarkId] = new google.maps.MVCArray;
 
-    var building = buildings[bldgId];
-    Object.keys(building['nds']).forEach(function(nodeId)
+    var landmark = landmarks[landmarkId];
+    Object.keys(landmark['nds']).forEach(function(nodeId)
     {
-      var node = building['nds'][nodeId];
+      var node = landmark['nds'][nodeId];
       addNode(node);
     });
 
-    polygon[bldgId] = new google.maps.Polygon({
+    polygon[landmarkId] = new google.maps.Polygon({
       strokeWeight : 2,
       fillColor    : '#ff0000'
     });
-    polygon[bldgId].setPaths(new google.maps.MVCArray([ path[bldgId] ]));
-    polygon[bldgId].setMap(map);
+    polygon[landmarkId].setPaths(new google.maps.MVCArray([ path[landmarkId] ]));
+    polygon[landmarkId].setMap(map);
   });
 }
 
@@ -89,17 +89,17 @@ $(document).ready(function()
 
   map = new google.maps.Map(document.getElementById('map-canvas'), options);
 
-  console.log('Fetching buildings list...');
+  console.log('Fetching landmarks...');
   $.ajax({
-    url     :'buildings.php',
-    success : function(buildings)
+    url     :'landmarks.php',
+    success : function(landmarks)
               {
-                initMarkers(buildings);
+                initMarkers(landmarks);
                 console.log('Done');
               },
     error   : function(jqXHR, textStatus, errorThrown)
               {
-                alert('Error fetching buildings list');
+                alert('Error fetching landmarks list');
                 console.log('Error: ' + errorThrown);
               },
   });
